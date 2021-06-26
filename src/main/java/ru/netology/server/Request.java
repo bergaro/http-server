@@ -1,10 +1,14 @@
 package ru.netology.server;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Request {
     private String msgType;
     private String requestPath;
     private String requestHeader;
     private String requestBody;
+    private Map<String, String> requestParameters = new HashMap<>();
 
     public String getMsgType() {
         return msgType;
@@ -36,6 +40,23 @@ public class Request {
 
     public void setRequestBody(String requestBody) {
         this.requestBody = requestBody;
+    }
+
+    public void setRequestParameters(String rqParameters) {
+        String[] pareArr = new String[2];
+        int count;
+        for(String paramPare : rqParameters.split("&")) {
+            count = 0;
+            for(String pareComponent : paramPare.split("=")) {
+                pareArr[count] = pareComponent;
+                count++;
+            }
+            requestParameters.put(pareArr[0], pareArr[1]);
+        }
+    }
+
+    public String getRequestParametersValue(String valueParam) {
+        return requestParameters.get(valueParam);
     }
 
     @Override

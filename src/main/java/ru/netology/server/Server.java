@@ -3,6 +3,9 @@ package ru.netology.server;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -97,14 +100,13 @@ public class Server {
                 // must be in form GET /path HTTP/1.1
                 var requestLine = in.readLine();
                 var parts = requestLine.split(" ");
-                var path = parts[1];
+                var path = getValidPathRq(parts[1], request);
                 if (parts.length != 3) {
                     getErrorResponse(socket, badRequest);
                 } else {
                     if (!validPaths.contains(path)) {
                         getErrorResponse(socket, fileNotFound);
                     } else {
-                        request.setRequestPath(path);
                         request.setMsgType(parts[0]);
                         sendMsg(request, socket);
                     }
@@ -113,6 +115,24 @@ public class Server {
                 ex.printStackTrace();
             }
         };
+    }
+    /**
+     * Отсекает переданные парметры из пути зароса.
+     * Сохраняет путь в объект Request.
+     * Если имеются параметры запроса, то они так же сохраняются в
+     * объект Request.
+     * @param pathRequest путь запроса
+     * @param request объект сообщения
+     * @return путь запроса, без параметров
+     */
+    protected String getValidPathRq(String pathRequest, Request request) {
+        String[] pathComponents = pathRequest.split("\\?");
+        if(pathComponents.length > 1) {
+            String GETParam = URLDecoder.decode(pathComponents[1], StandardCharsets.UTF_8);
+            request.setRequestParameters(GETParam);
+        }
+        request.setRequestPath(pathComponents[0]);
+        return request.getRequestPath();
     }
     /**
      * Новый метод отпарвки ответов сервера.

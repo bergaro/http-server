@@ -44,6 +44,22 @@ public class Main {
         }
       }
     });
+    // Обработчик для GET with parameters
+    server.addHandler("GET", "/forms.html", new MyHandler() {
+      @Override
+      public void handle(Request request, BufferedOutputStream out) {
+        try {
+          var filePath = Path.of(".", "public", request.getRequestPath());
+          var mimeType = Files.probeContentType(filePath);
+          var length = Files.size(filePath);
+          out.write(server.getTrueResponse(mimeType, (int) length).getBytes());
+          Files.copy(filePath, out);
+          out.flush();
+        } catch (IOException ex) {
+          System.out.println(ex.getMessage());
+        }
+      }
+    });
 
     server.serverListenPort();
   }
