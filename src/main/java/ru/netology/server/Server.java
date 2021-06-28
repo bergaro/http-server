@@ -1,8 +1,13 @@
 package ru.netology.server;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -86,6 +91,29 @@ public class Server {
         }
     }
     /**
+     * Анализирует строку запроса на наличие параметров.
+     * Если параметры найдены, пишет их в объект класса Request и
+     * возвращает чистый путь к странице.
+     * Либо просто возвращает путь к странице
+     * @param query строка запроса
+     * @param request объект класса Request
+     * @return чистый путь к странице
+     */
+    protected String setQueryParam(String query, Request request) {
+        String[] pathComponents = query.split("\\?");
+        if(pathComponents.length > 1) {
+            URI uri = URI.create(query);
+            var parseStr = URLEncodedUtils.parse(uri, Charset.defaultCharset().toString());
+            for(NameValuePair pair : parseStr) {
+                request.getQueryParamPare().put(pair.getName(), pair.getValue());
+            }
+            // Для демонстрации того, что значения переданные в GET запросе, сохранены м объект класса Request
+            System.out.println(request.getQueryParamPare());
+            return pathComponents[0];
+        }
+        return query;
+    }
+    /**
      * Описывает алгоритм работы отдельного потока.
      * @param socket сокет соединения
      * @return Runnable obj
@@ -97,7 +125,8 @@ public class Server {
                 // must be in form GET /path HTTP/1.1
                 var requestLine = in.readLine();
                 var parts = requestLine.split(" ");
-                var path = parts[1];
+                var path = setQueryParam(parts[1], request);
+
                 if (parts.length != 3) {
                     getErrorResponse(socket, badRequest);
                 } else {
